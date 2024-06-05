@@ -19,12 +19,12 @@
 (define TANK-Y (- HEIGHT 12))
 
 
-(define TANK-SPEED 2)
+(define TANK-SPEED 3)
 (define MISSILE-SPEED -10)
 
 (define HIT-RANGE 10)
 
-(define INVADE-RATE 3)  ; precentage
+(define INVADE-RATE 2)  ; precentage
 
 (define BACKGROUND (empty-scene WIDTH HEIGHT))
 ;(define BACKGROUND )
@@ -353,8 +353,8 @@
 ;; (define (update-tank-position t) t)
 
 (define (update-tank-position t)
-  (cond [(>= (tank-x t) WIDTH) t]
-        [(<= (tank-x t) 0)     t]
+  (cond [(and (>= (tank-x t) WIDTH) (= (tank-dir t) 1)) t]
+        [(and (<= (tank-x t) 0) (= (tank-dir t) -1))    t]
         [else (make-tank (+ (tank-x t) (* TANK-SPEED (tank-dir t))) (tank-dir t))]
         )
   )
@@ -438,20 +438,90 @@
 
 
 ; game -> Boolean
-;; produce ...
-;; !!!
-(define (lose? game) false)
+;; produce true if any invader touches the ground
+
+(check-expect (lose? (make-game empty (list M1) T1)) false)
+(check-expect (lose? (make-game (list I1) (list M1) T1)) false)
+(check-expect (lose?(make-game (list I2) (list M1) T1)) true)
+(check-expect (lose?(make-game (list I3) (list M1) T1)) true)
+;;(define (lose? game) false)
+(define (lose? s)
+  (beyond-height? (game-invaders s))
+  )
+
+;; ListOfInvaders -> Boolean
+;; produce true if any invader's y position is >= HEIGHT
+
+(define (beyond-height? loi)
+  (cond [(empty? loi) false]
+        [else
+         (or (>= (invader-y (first loi)) HEIGHT) (beyond-height? (rest loi)))]))
 
 ;; game KeyEvent -> game
 ;; produce 
-(define (key-handler game key) ...)
+;; (define (key-handler game key) ...)
 
-;
-;(define T0 (make-tank (/ WIDTH 2) 1))   ;center going right
-;(define T1 (make-tank 50 1))            ;going right
-;(define T2 (make-tank 50 -1))           ;going left
+(check-expect (key-handler
+               (make-game empty empty (make-tank 100 -1))
+               "right"
+               )
+              (make-game empty empty (make-tank 100 1))
+              )
+
+(check-expect (key-handler
+               (make-game empty empty (make-tank 100 1))
+               "left"
+               )
+              (make-game empty empty (make-tank 100 -1))
+              )
+(check-expect (key-handler
+               (make-game empty empty (make-tank 100 1))
+               ""
+               )
+              (make-game empty empty (make-tank 100 1))
+              )
+
+(check-expect (key-handler
+               (make-game empty empty (make-tank 100 1))
+               " "
+               )
+              (make-game empty (list (make-missile 100 (- TANK-Y 20))) (make-tank 100 1))
+              )
+
+
+
+
+(define (key-handler s key)
+  (make-game
+       (game-invaders s)
+       (if (string=? key " ")
+           (shoot (game-missiles s) (tank-x (game-tank s)))
+           (game-missiles s)
+           )
+
+       (cond
+         [(string=? key "left")(set-direction (game-tank s) -1)]
+         [(string=? key "right") (set-direction (game-tank s) 1)]
+         [else  (game-tank s)]
+         )
+       ))
+
+
+
+;; ListOfMissile Number Number -> ListOfMissiles
+;; Add a missile at x position
+
+;; (define (shoot lom x) lom)
+(define (shoot lom x)
+  (cons (make-missile x (- TANK-Y 20)) lom)
+  )
+
+;; Tank Number -> Tank
+;; update the tank's position
+;;(define (set-direction t dir)t)
+
+(define (set-direction t dir)
+  (make-tank (tank-x t) dir))
+
 
 (define G0 (make-game empty empty T0))
-(define G1 (make-game empty empty T1))
-(define G2 (make-game (list I1) empty T1))
-(define G3 (make-game (list I1 I2) (list M1 M2) T1))
