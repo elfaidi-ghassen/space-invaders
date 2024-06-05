@@ -315,13 +315,41 @@
 
 ;; ListOfMissile -> ListOfMissile
 ;; update y position of all missiles
-(define (update-missiles-positions lom) lom)
+(check-expect (update-missiles-positions empty) empty)
+(check-expect (update-missiles-positions (list (make-missile 100 100))) (list (make-missile 100 (+ 100 MISSILE-SPEED))))
+(check-expect (update-missiles-positions (list (make-missile 100 100) (make-missile 50 70))) (list (make-missile 100 (+ 100 MISSILE-SPEED)) (make-missile 50 (+ 70 MISSILE-SPEED))))
+
+;; (define (update-missiles-positions lom) lom)
+
+(define (update-missiles-positions lom)
+  (cond [(empty? lom) empty]
+        [else
+         (cons (update-one-mis (first lom)) (update-missiles-positions (rest lom)))]))
+
+
+;; Missile -> Missile
+;; update the position of one missile
+
+; (define (update-one-mis m) m)
+
+(define (update-one-mis m)
+  (make-missile (missile-x m) (+ (missile-y m) MISSILE-SPEED)))
 
 ;; Tank -> Tank
 ;; update x position of the tank
-(define (update-tank-position t) t)
+(check-expect (update-tank-position (make-tank 50 1)) (make-tank (+ 50 (* TANK-SPEED 1)) 1))
+(check-expect (update-tank-position (make-tank 50 -1)) (make-tank (+ 50 (* TANK-SPEED -1)) -1))
+(check-expect (update-tank-position (make-tank WIDTH 1)) (make-tank WIDTH 1))
+(check-expect (update-tank-position (make-tank 0 -1)) (make-tank 0 -1))
 
+;; (define (update-tank-position t) t)
 
+(define (update-tank-position t)
+  (cond [(>= (tank-x t) WIDTH) t]
+        [(<= (tank-x t) 0)     t]
+        [else (make-tank (+ (tank-x t) (* TANK-SPEED (tank-dir t))) (tank-dir t))]
+  )
+)
 ;; game -> Image
 ;; render ... 	
 ;; !!!
