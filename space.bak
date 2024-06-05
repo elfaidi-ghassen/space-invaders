@@ -23,7 +23,7 @@
 
 (define HIT-RANGE 10)
 
-(define INVADE-RATE 10)
+(define INVADE-RATE 100)
 
 (define BACKGROUND (empty-scene WIDTH HEIGHT))
 
@@ -164,7 +164,7 @@
 
 (define (update game) 
   (make-game
-   (add-random-inv (rm-if-hit (update-invaders-positions (list I1)) (list M1)))
+    (filter-inv (add-random-inv (rm-if-hit (update-invaders-positions (list I1)) (list M1))))
    (filter-mis(update-missiles-positions(list M1)))
    (update-tank-position T1)
   )
@@ -284,34 +284,18 @@
 
 ;; ListOfInvader -> ListOfInvader
 ;; randomly add an invader after a each while
-
-(define (add-random-inv loi)
-  (cond [(> (random 100) INVADE-RATE) loi]
-        [else (cons (make-invader (+ (/ WIDTH 5) (random (- WIDTH (/ WIDTH 2.5)))) 0 BASE-DX) loi)]
-        )
-  )
+;; !!!
+(define (add-random-inv loi) loi)
 
 
+;; ListOfInvader -> ListOfInvader
+;; remove invader if it landed
+(define (filter-inv loi) loi)
 
 
 ;; ListOfMissile -> ListOfMissile
 ;; remove missile if it Y > HEIGHT
-(check-expect (filter-mis empty) empty)
-(check-expect (filter-mis (list (make-missile 100 100))) (list (make-missile 100 100)))
-(check-expect (filter-mis (list (make-missile 100 HEIGHT))) empty)
-(check-expect (filter-mis (list (make-missile 100 HEIGHT) (make-missile 100 100))) (list (make-missile 100 100)))
-
-; (define (filter-mis lom) lom)
-
-(define (filter-mis lom)
-  (cond [(empty? lom) empty]
-        [else
-         (cond [(>= (missile-y (first lom)) HEIGHT) (filter-mis (rest lom))]
-               [else (cons (first lom) (filter-mis (rest lom)))])
-         
-         
-        ]))
-
+(define (filter-mis lom) lom)
 
 ;; ListOfMissile -> ListOfMissile
 ;; update y position of all missiles
